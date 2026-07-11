@@ -69,3 +69,8 @@ Either:
 so you write them once and reuse them.
 
 Edit the actual rules in `templates/CLAUDE.md`.
+
+## Learn more
+
+- **[RESOURCES.md](./RESOURCES.md)** — Educational materials, learning resources, and open-source projects related to Claude Code and this kit.
+- **[CLAUDE.md](./CLAUDE.md)** — Rules for this repository itself.
