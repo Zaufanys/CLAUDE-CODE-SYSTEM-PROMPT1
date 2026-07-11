@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [],
+    "deny": []
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Claude Code: follow the rules in ./CLAUDE.md for this project.'"
+          }
+        ]
+      }
+    ]
+  }
+}
