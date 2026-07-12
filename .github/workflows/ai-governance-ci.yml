@@ -1,0 +1,29 @@
+# Runs the AI Agent Governance Dashboard test + lint suite for changes made
+# to the project subdirectory in this repository, so pull requests validate green.
+name: AI Governance Dashboard CI
+
+on:
+  push:
+    paths:
+      - "ai-agent-governance-dashboard/**"
+      - ".github/workflows/ai-governance-ci.yml"
+  pull_request:
+    paths:
+      - "ai-agent-governance-dashboard/**"
+      - ".github/workflows/ai-governance-ci.yml"
+
+defaults:
+  run:
+    working-directory: ai-agent-governance-dashboard
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm test
+      - run: npm run lint

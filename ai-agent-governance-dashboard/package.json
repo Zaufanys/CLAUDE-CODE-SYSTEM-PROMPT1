@@ -1,0 +1,26 @@
+{
+  "name": "ai-agent-governance-dashboard",
+  "version": "1.0.0",
+  "description": "AI agent governance dashboard for traceability, approvals, prompt-injection flags, tool-call monitoring, and audit-ready AI oversight.",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "dev": "node scripts/serve.mjs",
+    "test": "node --test",
+    "lint": "node scripts/lint.mjs"
+  },
+  "keywords": [
+    "ai-governance",
+    "agentic-ai",
+    "observability",
+    "prompt-injection",
+    "tool-calling",
+    "audit-log",
+    "cybersecurity"
+  ],
+  "author": "Micheal Wolski",
+  "license": "MIT"
+}
