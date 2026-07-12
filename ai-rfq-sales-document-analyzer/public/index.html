@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>AI RFQ / Sales Document Analyzer</title>
+    <meta
+      name="description"
+      content="Production-style RFQ and sales-document analyzer: structured extraction, missing-field and risk detection, RAG-style evidence, and a human-in-the-loop review workflow."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <span class="pill">OE Sales · GenAI Document Automation · Human-in-the-Loop</span>
+      <h1>AI RFQ / Sales Document Analyzer</h1>
+      <p>
+        Intake an RFQ or sales document, extract structured fields, detect missing
+        information and business risks, trace every value back to its source, and
+        produce an auditable human-review package ready for CRM / intake.
+      </p>
+    </header>
+
+    <main>
+      <div class="grid">
+        <!-- Intake -->
+        <section class="card span6">
+          <h2>RFQ Intake</h2>
+          <p class="muted">
+            Paste an RFQ, quote request, or sales document, or load a sample to
+            demo instantly. Sample data is fictional.
+          </p>
+          <label for="sampleSelect">Load sample document</label>
+          <select id="sampleSelect" aria-label="Load sample document"></select>
+          <textarea
+            id="documentInput"
+            aria-label="RFQ document text"
+            placeholder="Paste RFQ / sales document text here…"
+          ></textarea>
+          <div class="row" style="margin-top: 12px">
+            <button class="primary" id="analyzeBtn">Analyze Document</button>
+            <button id="clearBtn">Clear</button>
+          </div>
+        </section>
+
+        <!-- Review summary -->
+        <section class="card span6">
+          <h2>Review Summary</h2>
+          <div class="grid">
+            <div class="kpi span4">
+              <span class="muted">Completeness</span>
+              <strong id="completeness">0%</strong>
+            </div>
+            <div class="kpi span4">
+              <span class="muted">Open Risks</span>
+              <strong id="riskCount">0</strong>
+            </div>
+            <div class="kpi span4">
+              <span class="muted">Status</span>
+              <strong id="status">Not run</strong>
+            </div>
+          </div>
+          <div class="bar" style="margin-top: 14px"><span id="completeBar"></span></div>
+          <div class="notice" style="margin-top: 14px" id="nextActions">
+            Run analysis to generate recommended next actions.
+          </div>
+        </section>
+
+        <!-- Structured extraction -->
+        <section class="card span6">
+          <h2>Structured Extraction</h2>
+          <table>
+            <tbody id="fieldTable"></tbody>
+          </table>
+        </section>
+
+        <!-- Risk + missing -->
+        <section class="card span6">
+          <h2>Risk Summary &amp; Missing Info</h2>
+          <table>
+            <tbody id="riskTable"></tbody>
+          </table>
+        </section>
+
+        <!-- Data quality -->
+        <section class="card span6">
+          <h2>Data Quality</h2>
+          <table>
+            <tbody id="qualityTable"></tbody>
+          </table>
+        </section>
+
+        <!-- Evidence -->
+        <section class="card span6">
+          <h2>Evidence Snippets</h2>
+          <table>
+            <tbody id="evidenceTable"></tbody>
+          </table>
+        </section>
+
+        <!-- Human review package -->
+        <section class="card span7">
+          <h2>Human Review Package</h2>
+          <p class="muted">
+            Record a reviewer decision. The decision, reviewer, comment, and
+            timestamp are written into the exported JSON as an audit trail.
+          </p>
+          <label for="reviewerName">Reviewer</label>
+          <input id="reviewerName" type="text" placeholder="e.g. J. Rivera, OE Sales" />
+          <label for="reviewComment">Reviewer comment</label>
+          <textarea
+            id="reviewComment"
+            class="short"
+            placeholder="Optional notes for the audit trail…"
+          ></textarea>
+          <div class="row" style="margin-top: 12px">
+            <button class="good-btn" id="approveBtn">Approve</button>
+            <button class="warn-btn" id="needsInfoBtn">Needs Info</button>
+            <button class="bad-btn" id="rejectBtn">Reject</button>
+          </div>
+          <div class="notice" style="margin-top: 14px" id="decisionOut">
+            No decision recorded yet.
+          </div>
+        </section>
+
+        <!-- Output -->
+        <section class="card span5">
+          <h2>JSON / CRM Payload</h2>
+          <div class="row" style="margin-bottom: 10px">
+            <button id="copyJsonBtn">Copy JSON</button>
+            <button id="downloadJsonBtn">Download JSON</button>
+            <button id="copyCrmBtn">Copy CRM Payload</button>
+            <button id="downloadCsvBtn">Download CSV</button>
+          </div>
+          <pre id="jsonOut">{}</pre>
+        </section>
+      </div>
+    </main>
+
+    <div class="footer">
+      Portfolio prototype by Micheal Wolski · OE Sales Digitalization &amp; AI
+      readiness · All sample data is fictional.
+    </div>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
