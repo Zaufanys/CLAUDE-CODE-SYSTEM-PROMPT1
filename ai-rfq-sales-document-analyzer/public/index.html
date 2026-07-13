@@ -6,18 +6,19 @@
     <title>AI RFQ / Sales Document Analyzer</title>
     <meta
       name="description"
-      content="Production-style RFQ and sales-document analyzer: structured extraction, missing-field and risk detection, RAG-style evidence, and a human-in-the-loop review workflow."
+      content="Local-first RFQ and sales-document analyzer: structured extraction, missing-field and risk detection, source evidence, data-quality checks, and a human-in-the-loop review workflow with a persistent reviewer queue."
     />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <header>
-      <span class="pill">OE Sales · GenAI Document Automation · Human-in-the-Loop</span>
+      <span class="pill">RFQ Intake · Structured Extraction · Human Review</span>
       <h1>AI RFQ / Sales Document Analyzer</h1>
       <p>
         Intake an RFQ or sales document, extract structured fields, detect missing
-        information and business risks, trace every value back to its source, and
-        produce an auditable human-review package ready for CRM / intake.
+        information and business risks, trace every value back to its source, record
+        a review decision, and keep an auditable queue of everything you process —
+        all in your browser, with no account and no server.
       </p>
     </header>
 
@@ -27,18 +28,26 @@
         <section class="card span6">
           <h2>RFQ Intake</h2>
           <p class="muted">
-            Paste an RFQ, quote request, or sales document, or load a sample to
-            demo instantly. Sample data is fictional.
+            Paste text, drop or upload a <code>.txt</code> file, or load an included
+            example.
           </p>
-          <label for="sampleSelect">Load sample document</label>
-          <select id="sampleSelect" aria-label="Load sample document"></select>
-          <textarea
-            id="documentInput"
-            aria-label="RFQ document text"
-            placeholder="Paste RFQ / sales document text here…"
-          ></textarea>
+          <label for="sampleSelect">Load example document</label>
+          <select id="sampleSelect" aria-label="Load example document"></select>
+          <div
+            id="dropZone"
+            class="dropzone"
+            aria-label="Drop a .txt file or paste RFQ text"
+          >
+            <textarea
+              id="documentInput"
+              aria-label="RFQ document text"
+              placeholder="Paste RFQ / sales document text here, or drop a .txt file…"
+            ></textarea>
+          </div>
+          <input id="fileInput" type="file" accept=".txt,text/plain" hidden />
           <div class="row" style="margin-top: 12px">
             <button class="primary" id="analyzeBtn">Analyze Document</button>
+            <button id="uploadBtn">Upload .txt</button>
             <button id="clearBtn">Clear</button>
           </div>
         </section>
@@ -102,8 +111,8 @@
         <section class="card span7">
           <h2>Human Review Package</h2>
           <p class="muted">
-            Record a reviewer decision. The decision, reviewer, comment, and
-            timestamp are written into the exported JSON as an audit trail.
+            Record a reviewer decision, then save it to the queue. The decision,
+            reviewer, comment, and timestamp are stored as an audit trail.
           </p>
           <label for="reviewerName">Reviewer</label>
           <input id="reviewerName" type="text" placeholder="e.g. J. Rivera, OE Sales" />
@@ -117,6 +126,7 @@
             <button class="good-btn" id="approveBtn">Approve</button>
             <button class="warn-btn" id="needsInfoBtn">Needs Info</button>
             <button class="bad-btn" id="rejectBtn">Reject</button>
+            <button class="primary" id="saveQueueBtn">Save to Queue</button>
           </div>
           <div class="notice" style="margin-top: 14px" id="decisionOut">
             No decision recorded yet.
@@ -134,12 +144,41 @@
           </div>
           <pre id="jsonOut">{}</pre>
         </section>
+
+        <!-- Reviewer queue -->
+        <section class="card span12">
+          <div class="row" style="justify-content: space-between">
+            <h2 style="margin: 0">Reviewer Queue <span class="muted" id="queueCount"></span></h2>
+            <div class="row">
+              <button id="exportQueueBtn">Export Queue (JSON)</button>
+              <button class="bad-btn" id="clearQueueBtn">Clear Queue</button>
+            </div>
+          </div>
+          <p class="muted">
+            Saved documents persist in this browser. Open one to reload it, or delete
+            it from the queue.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Saved</th>
+                <th>Customer</th>
+                <th>RFQ ID</th>
+                <th>Complete</th>
+                <th>Status</th>
+                <th>Decision</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="queueTable"></tbody>
+          </table>
+        </section>
       </div>
     </main>
 
     <div class="footer">
-      Portfolio prototype by Micheal Wolski · OE Sales Digitalization &amp; AI
-      readiness · All sample data is fictional.
+      AI RFQ / Sales Document Analyzer — local-first RFQ intake &amp; review · MIT
+      licensed · Included example documents are illustrative.
     </div>
     <script type="module" src="app.js"></script>
   </body>

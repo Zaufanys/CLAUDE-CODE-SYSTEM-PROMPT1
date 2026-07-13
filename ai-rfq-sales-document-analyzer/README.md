@@ -1,138 +1,112 @@
 # AI RFQ / Sales Document Analyzer
 
-Production-style portfolio prototype for **OE sales digitalization** and **GenAI
-document automation**. It ingests an RFQ or sales document and turns unstructured
-text into a structured, traceable, review-ready package: extracted fields,
-missing-information detection, business-risk flags, source evidence, data-quality
-gates, and a human-in-the-loop approval workflow with an exportable audit trail.
+A local-first web app for turning RFQs and sales documents into structured,
+traceable, review-ready records. Paste text or drop in a `.txt` file and the app
+extracts the key fields, flags missing information and business risks, ties each
+value back to its source, runs data-quality checks, and lets a reviewer approve,
+request info, or reject — keeping an **auditable queue** of everything you
+process. Everything runs in your browser: **no account, no server, no API keys,
+no setup.**
 
-The extraction runs **locally and deterministically** — no API keys, no network,
-no paid dependencies — so the demo is reproducible in under two minutes. The same
-input/output contract is designed to be swapped for an LLM extraction step in
-production (see [ARCHITECTURE.md](ARCHITECTURE.md)).
+## Features
 
-> ⚠️ **All sample data is fictional.** Customer names, programs, volumes, and
-> prices are invented for demonstration. This is an independent portfolio project
-> and contains no confidential or proprietary data from any company.
+- **Document intake** — paste text, drag-and-drop a `.txt` file, upload one, or
+  load an included example.
+- **Structured extraction** — customer, RFQ ID, due date, product, region,
+  program, SOP, annual volume, and price target.
+- **Missing-info & risk detection** — required-field gaps and business risks
+  (warranty gaps, unassigned engineering owner, supplier constraints,
+  cybersecurity/software impact, portal deadlines) with severity.
+- **Data-quality checks** — customer presence, a valid calendar due date (catches
+  present-but-invalid dates), price target, annual volume, and high-severity risk
+  language.
+- **Source evidence** — the snippet of original text each extracted value came
+  from, so a reviewer can verify it.
+- **Human review workflow** — Approve / Needs Info / Reject with reviewer,
+  comment, and timestamp. Approving over open fields or high-severity risk is
+  flagged as an explicit override.
+- **Persistent reviewer queue** — save processed documents (with their decisions)
+  to a queue that survives page reloads; reopen, re-review, delete, or export the
+  whole queue as JSON.
+- **Exports** — per-document JSON and CSV, plus a compact CRM/Dataverse-style
+  payload.
 
----
+## Requirements
 
-## Why this project / role relevance
+- [Node.js](https://nodejs.org/) 20 or newer (only to run the local static
+  server — the app itself has **zero runtime dependencies**).
+- A modern browser.
 
-This prototype is built to demonstrate readiness for an **OE Sales,
-Digitalization & AI Specialist**–type role. It deliberately focuses on the
-concerns such a role cares about rather than a generic chatbot:
-
-- **Sales-document automation** — reduce manual RFQ triage time.
-- **Structured extraction** — turn free text into CRM/ERP-ready fields.
-- **Traceability (RAG-style evidence)** — every extracted value links back to its
-  source text, so a reviewer can trust it.
-- **Data quality & governance** — explicit checks and a **human-in-the-loop**
-  approval step, not blind automation.
-- **Auditability** — reviewer, decision, comment, and timestamp captured for the
-  record.
-
----
-
-## Demo walkthrough (under 2 minutes)
-
-1. **RFQ Intake** — a sample document loads automatically. Use the dropdown to
-   switch between a complete RFQ, one missing key fields, and a
-   cybersecurity/software-requirement RFQ. You can also paste your own text.
-2. **Structured Extraction** — customer, RFQ ID, due date, product, region,
-   volume, price target, program, and SOP are extracted into a table.
-3. **Risk Summary & Missing Info** — missing required fields and business risks
-   (warranty gaps, unassigned engineering owner, supplier constraints,
-   cybersecurity/software impact, portal deadlines) are flagged with severity.
-4. **Data Quality** — pass/fail gates for customer presence, a valid calendar due
-   date, price target, annual volume, and high-severity risk language.
-5. **Evidence Snippets** — the source text around each extracted value.
-6. **Human Review Package** — enter a reviewer name and comment, then
-   **Approve / Needs Info / Reject**. Approving an RFQ that still has missing
-   fields or high-severity risk is flagged as an intentional override.
-7. **JSON / CRM Payload** — copy or download the structured JSON, copy a compact
-   CRM/Dataverse-style payload, or download a CSV summary. The reviewer decision
-   and timestamp are embedded as an audit trail.
-
-## Screenshots
-
-_Add screenshots or a short GIF of the running app here._
-
-| View | Placeholder |
-| --- | --- |
-| Full dashboard | `docs/screenshot-dashboard.png` |
-| Human review package | `docs/screenshot-review.png` |
-
-> Tip: run the app (below), screenshot the dashboard, and drop the images into a
-> `docs/` folder to replace these placeholders.
-
----
-
-## Run locally
+## Run
 
 ```bash
 npm start
 ```
 
-Then open `http://localhost:4173`. No `npm install` is required — the project has
-**zero runtime dependencies**.
+Open `http://localhost:4173`. No `npm install` needed.
 
 ## Test & lint
 
 ```bash
-npm test    # node --test — extraction + review-workflow unit tests
-npm run lint # structural checks + guards the site stays self-contained
+npm test     # node --test — 23 unit tests (extraction, review, persistence)
+npm run lint # structural checks + guards that the browser code stays self-contained
 ```
 
-## Deploy (GitHub Pages)
+## Usage
 
-The app is a **self-contained static site** — everything the browser needs lives
-under `public/`. The included [`.github/workflows/pages.yml`](.github/workflows/pages.yml)
-publishes `public/` to GitHub Pages. In the repository settings, set
-**Pages → Source: GitHub Actions**, and the workflow deploys on every push to
-`main`. (You can also host `public/` on any static host such as Netlify or
-Vercel.)
+1. **Intake** — paste an RFQ, drop/upload a `.txt` file, or pick an example, then
+   click **Analyze Document**.
+2. **Review** — read the extracted fields, risks, data-quality results, and
+   evidence. The summary shows completeness, open-risk count, and whether the
+   document needs human review.
+3. **Decide** — enter your name and an optional comment, then **Approve**,
+   **Needs Info**, or **Reject**.
+4. **Save** — click **Save to Queue** to persist the document and decision. It
+   appears in the **Reviewer Queue** and stays there after you reload.
+5. **Export** — download JSON/CSV for one document, copy the CRM payload, or
+   export the whole queue as JSON.
 
----
+## How it works
 
-## Architecture overview
-
-```
-Document text
-   │
-   ▼
-analyzeRfq()  ──►  fields · numeric · requirements · missing
-   │                risks · evidence · dataQuality · completeness
-   ▼
-buildReviewPackage()  ──►  reviewer decision + comment + timestamp (audit trail)
-   │
-   ▼
-toCrmPayload()  ──►  compact record for CRM / ERP / Power BI intake
-```
+The app is a static site plus a tiny zero-dependency Node server. All analysis
+and persistence logic lives in shared ES modules under `public/js/`, so the exact
+same code runs in the browser and in the Node test suite.
 
 - `public/js/schema.js` — required fields, labels, risk rules, data-quality
   rules, and a strict ISO-date validator.
 - `public/js/rfqAnalyzer.js` — deterministic extraction, evidence, and scoring.
-- `public/js/review.js` — human-in-the-loop decision package and CRM payload.
-- `public/app.js` — thin UI layer; all logic is in the shared modules above, so
-  the **exact same code runs in the browser and in the Node test suite**.
+- `public/js/review.js` — the review decision package and CRM payload.
+- `public/js/store.js` — the persistent reviewer queue (localStorage, with an
+  in-memory fallback used by tests).
+- `public/app.js` — the UI layer.
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for the current design and a production
-target (Azure AI Foundry / Microsoft Fabric / RAG, governance, and approvals).
+Extraction is deterministic and rule-based, which is why the app needs no API
+keys and produces explainable, repeatable results. See
+[ARCHITECTURE.md](ARCHITECTURE.md) for the design and how it can be extended with
+a server backend, real document parsing, or LLM-based extraction.
+
+## Deploy
+
+The app is a self-contained static site — everything the browser needs lives
+under `public/`. The included [`.github/workflows/pages.yml`](.github/workflows/pages.yml)
+publishes `public/` to GitHub Pages (set **Pages → Source: GitHub Actions** in the
+repo settings). It can also be hosted on any static host (Netlify, Vercel, S3,
+etc.). The reviewer queue is stored per-browser via localStorage.
 
 ## Project structure
 
 ```
 ai-rfq-sales-document-analyzer/
 ├── public/
-│   ├── index.html          # UI
+│   ├── index.html
 │   ├── styles.css
 │   ├── app.js              # UI wiring (imports the shared modules below)
 │   ├── js/
 │   │   ├── schema.js       # fields, risk rules, data-quality rules
 │   │   ├── rfqAnalyzer.js  # extraction + scoring + evidence
-│   │   └── review.js       # human review workflow + CRM payload
-│   └── samples/            # fictional sample RFQs + manifest
+│   │   ├── review.js       # review workflow + CRM payload
+│   │   └── store.js        # persistent reviewer queue
+│   └── samples/            # example RFQs + manifest
 ├── scripts/
 │   ├── serve.mjs           # zero-dependency static server
 │   └── lint.mjs            # structural + self-contained-site checks
@@ -140,28 +114,20 @@ ai-rfq-sales-document-analyzer/
 └── .github/workflows/      # CI (test + lint) and Pages deployment
 ```
 
----
+## Notes
 
-## What this demonstrates in an interview
+- The reviewer queue lives in your browser's localStorage; clearing site data or
+  using a different browser/device starts a fresh queue. Use **Export Queue** to
+  back it up.
+- The included example documents are illustrative and use invented company names,
+  volumes, and prices.
 
-- Framing an AI feature around a **real sales workflow**, not a demo chatbot.
-- **Structured output** with a stable schema suitable for downstream systems.
-- **Source traceability / RAG thinking** for reviewer trust.
-- **Data quality and governance** as first-class concerns.
-- **Human-in-the-loop** approval with an audit trail.
-- Clean, testable, dependency-light engineering (unit tests, CI, lint).
+## Roadmap (optional extensions)
 
-## Future production roadmap
-
-- Real LLM extraction (Azure AI Foundry / OpenAI / local model), **disabled by
-  default** unless an API key is provided.
-- PDF/DOCX ingestion via a backend parser; drag-and-drop upload.
-- True hybrid / vector retrieval with reranking for evidence grounding.
-- Evaluation dataset with expected fields and extraction accuracy metrics.
+- PDF/DOCX intake via a backend parser.
+- Optional LLM-based extraction (disabled unless an API key is provided).
+- A shared server backend with a database-backed queue and multi-user review.
 - Authentication and role-based access control.
-- Database-backed audit trail and secure document storage.
-- Approval routing via email / Teams / Power Automate.
-- Prompt-injection and document-injection testing; monitoring and tracing.
 
 ## License
 

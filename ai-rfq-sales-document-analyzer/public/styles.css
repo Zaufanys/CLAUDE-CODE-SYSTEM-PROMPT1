@@ -130,6 +130,36 @@ textarea {
   resize: vertical;
 }
 textarea.short { min-height: 90px; }
+.dropzone {
+  position: relative;
+  border-radius: 14px;
+  transition: outline-color 0.15s ease;
+  outline: 2px dashed transparent;
+  outline-offset: 3px;
+}
+.dropzone.dragover {
+  outline-color: var(--accent);
+}
+.dropzone.dragover::after {
+  content: "Drop .txt file to analyze";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: rgba(90, 167, 255, 0.14);
+  color: var(--text);
+  font-weight: 700;
+  pointer-events: none;
+}
+code {
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1px 6px;
+  font-size: 0.85em;
+}
 label {
   display: block;
   margin: 0.6rem 0 0.3rem;

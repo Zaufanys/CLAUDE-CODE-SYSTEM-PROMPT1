@@ -1,7 +1,7 @@
 {
   "name": "ai-rfq-sales-document-analyzer",
-  "version": "1.1.0",
-  "description": "RFQ and sales document analyzer demonstrating GenAI document automation, structured extraction, RAG-style evidence, data-quality checks, and a human-in-the-loop review workflow.",
+  "version": "1.2.0",
+  "description": "Local-first RFQ and sales-document analyzer: structured extraction, missing-field and risk detection, source evidence, data-quality checks, a human-in-the-loop review workflow, and a persistent reviewer queue.",
   "type": "module",
   "scripts": {
     "start": "node scripts/serve.mjs",
@@ -17,7 +17,7 @@
     "rag",
     "structured-output",
     "human-in-the-loop",
-    "portfolio-project"
+    "local-first"
   ],
   "author": "Micheal Wolski",
   "license": "MIT",

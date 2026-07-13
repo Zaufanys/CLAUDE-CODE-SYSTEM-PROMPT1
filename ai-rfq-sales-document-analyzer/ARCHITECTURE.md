@@ -1,22 +1,23 @@
 # Architecture
 
-## Current design (this prototype)
+## Overview
 
-The prototype is a **zero-dependency static web app** with a deterministic,
-rule-based analysis core. It is intentionally simple so the demo is reproducible
-without API keys or a backend, while keeping a **stable input/output contract**
-that a production LLM pipeline could implement without changing the UI.
+The app is a **local-first, zero-dependency static web app** with a small Node
+static server for local use and a self-contained `public/` folder for static
+hosting. All analysis and persistence logic lives in shared ES modules under
+`public/js/`, so the exact same code runs in the browser and in the `node --test`
+suite. There is no backend and no external service — documents and review
+decisions never leave the browser.
 
 ### Flow
 
-1. **Intake.** The user pastes an RFQ / sales document or loads a fictional
-   sample (`public/samples/*`).
+1. **Intake.** The user pastes text, drops/uploads a `.txt` file, or loads an
+   included example (`public/samples/*`).
 2. **Extraction.** `analyzeRfq()` (`public/js/rfqAnalyzer.js`) extracts structured
    fields via labelled-line and regex rules and parses numeric values
    (annual volume, price target).
 3. **Evidence.** For each extracted value the analyzer captures a short source
-   snippet so a reviewer can trace it back to the original text (RAG-style
-   grounding, done locally here).
+   snippet so a reviewer can trace it back to the original text.
 4. **Risk & missing-info detection.** Required-field gaps and business-risk
    phrases (warranty, engineering owner, supplier constraints,
    cybersecurity/software documentation, portal deadlines) are flagged with
@@ -31,65 +32,77 @@ that a production LLM pipeline could implement without changing the UI.
    reviewer, decision (Approve / Needs Info / Reject), comment, and timestamp.
    Approving with open required fields or high-severity risks is flagged as an
    explicit override.
-8. **Downstream output.** `toCrmPayload()` produces a compact record for
-   CRM / ERP / Power BI / intake systems; the UI can export JSON and CSV.
+8. **Persistence.** `store.js` saves processed documents and decisions to a
+   reviewer queue in `localStorage`, so work survives reloads. Records can be
+   reopened, re-reviewed, deleted, or exported.
+9. **Output.** `toCrmPayload()` produces a compact record for CRM / ERP / intake
+   systems; the UI exports per-document JSON/CSV and whole-queue JSON.
+
+### Modules
+
+| Module | Responsibility |
+| --- | --- |
+| `public/js/schema.js` | Field list, labels, risk rules, data-quality rules, ISO-date validator |
+| `public/js/rfqAnalyzer.js` | Deterministic extraction, evidence, scoring |
+| `public/js/review.js` | Review decision package + CRM payload |
+| `public/js/store.js` | Persistent reviewer queue (localStorage + in-memory fallback) |
+| `public/app.js` | UI wiring: intake, rendering, exports, queue |
+| `scripts/serve.mjs` | Zero-dependency static file server |
+| `scripts/lint.mjs` | Structural checks; guards the site stays self-contained |
 
 ### Design choices
 
-- **Single source of truth.** All analysis and review logic lives in
-  `public/js/*` as pure ES modules with no DOM or Node-only APIs, so the **exact
-  same code runs in the browser and in the `node --test` suite**. This keeps the
-  UI a thin layer and makes the logic fully unit-testable.
+- **Single source of truth.** Analysis and persistence logic are pure ES modules
+  with no DOM-only or Node-only assumptions (the store takes an injectable
+  storage backend), so the same code is exercised by the browser and the tests.
 - **Self-contained site.** Because the shared modules live under `public/`, the
-  app deploys as a pure static site (GitHub Pages / any static host). `lint.mjs`
-  actively guards against re-introducing an out-of-root import.
-- **Deterministic core.** Rule-based extraction means the demo is reproducible
-  and explainable — useful for governance conversations.
+  app deploys as a pure static site. `lint.mjs` actively guards against
+  re-introducing an out-of-root import.
+- **Deterministic core.** Rule-based extraction means results are explainable and
+  repeatable, with no API keys or network calls.
+- **Local-first data.** Nothing is uploaded; the reviewer queue is per-browser.
+  Exporting to JSON is the backup/handoff mechanism.
 
-## Production extension
+## Extending to a server deployment
 
-The same contract scales to an enterprise pipeline:
+The same output contract scales to a multi-user, server-backed system:
 
 ```
-Sources (SharePoint / OneLake / Blob)
+Sources (upload / SharePoint / Blob)
    │  ingestion + parsing (PDF/DOCX/email)
    ▼
-Chunking + embeddings ──► Vector store (hybrid + keyword retrieval, reranking)
-   │
-   ▼
-LLM extraction (Azure AI Foundry / OpenAI / local)
-   │  schema-validated structured output + grounded evidence
+Extraction (rule-based today; optionally LLM with enforced JSON schema)
+   │  structured output + grounded evidence
    ▼
 Risk + data-quality + completeness scoring
    │
    ▼
-Human approval workflow (email / Teams / Power Automate)
+Human review workflow (Approve / Needs Info / Reject)
    │  reviewer + decision + comment + timestamp
    ▼
-CRM / ERP / Dataverse / Power BI   +   audit store + tracing/evaluation
+Server-backed queue (database) + exports to CRM / ERP / BI
 ```
 
-### Production building blocks
+Building blocks for that path:
 
-- **Retrieval:** hybrid search (vector + keyword), reranking, source-grounded
-  evidence rather than local string matching.
-- **Extraction:** LLM with enforced JSON schema validation; the current
-  `analyzeRfq` output shape is the target schema. Optional AI mode stays
-  **disabled unless an API key / environment variable is provided**.
-- **Orchestration:** Azure AI Foundry / Microsoft Fabric / Databricks or a
-  LangGraph-style agent for multi-step extraction, validation, and routing.
-- **Governance & audit controls:** immutable audit trail (who/what/when/why),
-  role-based access control, secure document storage, PII handling, and
-  prompt-injection / document-injection testing.
-- **Human approval:** routing and escalation with SLA tracking; overrides
-  recorded explicitly (as the prototype already models).
-- **Observability:** tracing, evaluation datasets with expected fields, and
-  extraction-accuracy dashboards.
+- **Document parsing:** a backend service to accept PDF/DOCX and normalise to
+  text before extraction.
+- **Optional LLM extraction:** swap the deterministic extractor for an LLM call
+  that returns the same schema; keep it **disabled unless an API key is
+  configured** so the default build stays dependency-free.
+- **Shared queue:** replace the `localStorage` store with a database-backed API
+  (`store.js`'s interface — read/upsert/delete/clear — maps directly onto REST
+  endpoints), enabling multi-user review.
+- **Access control & audit:** authentication, role-based access, and an immutable
+  audit trail (who/what/when/why) for the review decisions the app already
+  records.
+- **Retrieval grounding:** for large document sets, hybrid/vector retrieval with
+  reranking to source the evidence snippets.
 
-### Output contract (stable across local and production)
+### Output contract
 
 `analyzeRfq()` returns: `documentType`, `extractedAt`, `fields`, `numeric`,
 `requirements`, `missing`, `risks`, `evidence`, `dataQuality`, `completeness`,
 `reviewStatus`, and `recommendedNextActions`. Keeping this contract stable is
-what lets the deterministic core be replaced by an LLM pipeline without touching
-the UI or the review workflow.
+what lets the deterministic core be replaced by a server or LLM pipeline without
+touching the UI, the review workflow, or the persistence layer.

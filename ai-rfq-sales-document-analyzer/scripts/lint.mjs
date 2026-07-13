@@ -11,6 +11,7 @@ const required = [
   "public/js/rfqAnalyzer.js",
   "public/js/schema.js",
   "public/js/review.js",
+  "public/js/store.js",
   "public/samples/index.json",
   "public/samples/sample-rfq.json",
   "README.md",
