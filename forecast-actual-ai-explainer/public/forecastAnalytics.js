@@ -349,7 +349,7 @@ export function executiveSummaryMarkdown(records = [], meta = {}) {
     ...ex.recommendedActions.map((a) => `1. ${a}`),
     "",
     "---",
-    "_Figures are computed deterministically from structured data. Sample data is fictional; the narrative is generated from the metrics above, not from a language model._",
+    "_Figures are computed deterministically from the source data. The narrative is generated from the metrics above, not from a language model._",
     "",
   ];
   return lines.filter((l) => l !== "").join("\n") + "\n";

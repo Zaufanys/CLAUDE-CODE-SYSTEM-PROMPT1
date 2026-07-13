@@ -1,141 +1,117 @@
 # Forecast vs Actual Dashboard with AI Explainer
 
-A production-style portfolio prototype for **sales forecasting, variance analysis, and
-AI-assisted business explanation**. It compares forecast against actual sales, scores the
-forecasting risk, surfaces the customer and product drivers, and generates an explainable set
-of next actions — all computed deterministically from structured data, with **no language-model
-call and no invented numbers**.
+A ready-to-use web app for **forecast-vs-actual sales analysis**. Upload your forecast and actual
+figures and it computes the variance, forecast accuracy, bias, and risk, ranks the customer and
+product drivers, and writes a plain-language explanation with recommended next actions — then lets
+you export the results as CSV or a Markdown executive summary.
 
-> **Fictional data disclaimer.** Every figure in this project uses fictional sample data
-> (`public/data/sales.json`). It contains no confidential or proprietary information from any
-> company. It is a demonstration of technique, not a report on any real business.
+Everything runs in your browser. There is **no build step, no framework, no server, and no
+account** — your data never leaves your machine. It's a single static site backed by one
+dependency-free JavaScript module.
 
-![Forecast vs Actual dashboard screenshot](docs/screenshot.png)
+![Dashboard screenshot](docs/screenshot.png)
 
----
+## Features
 
-## Why this project exists
+- **Upload your own data** as CSV — it's saved in your browser and restored on your next visit.
+- **KPIs**: forecast, actual, variance (absolute & %), forecast accuracy, MAPE, forecast bias.
+- **Risk scoring**: each dataset is graded **Controlled / Watch / Critical** with the reason.
+- **Driver analysis**: top customer and product variance, biggest single over- and under-runs.
+- **Scenario sensitivity**: Base / Optimistic / Downside bands to stress-test the numbers.
+- **Rolling 3-month variance** to smooth out single-month noise.
+- **AI-style explainer** that turns the metrics into a business narrative and action list —
+  generated deterministically from the numbers, so nothing is invented.
+- **Exports**: filtered CSV, or a one-click Markdown executive summary.
+- **Filters** by customer and product; every metric, chart, and the narrative recompute live.
 
-It demonstrates the end-to-end thinking behind an **OE (Original Equipment) sales
-decision-support tool**: turning raw forecast/actual data into KPIs, variance drivers, risk
-status, and a narrative a sales manager can act on.
-
-The design deliberately separates two concerns that are easy to blur:
-
-1. **Analytics / forecasting logic** owns every number — totals, variance, MAPE, accuracy,
-   forecast bias, rolling variance, and risk scoring.
-2. **The AI-style explainer** only *translates* those computed values into business language and
-   recommended actions. It never predicts or fabricates a figure.
-
-That separation is the whole point: it is how you get GenAI-style explanations you can trust in
-a reporting context.
-
-## Relevance to a Digitalization & AI / Sales role
-
-| Capability the role wants | Where it shows up here |
-| --- | --- |
-| Sales & forecasting analytics | Forecast, actual, variance, MAPE, accuracy, forecast bias |
-| Variance analysis & driver hunting | Top customer / product variance, largest single over- and under-runs |
-| Business intelligence / KPI reporting | KPI tiles, executive summary, exportable reports |
-| Risk-based decision support | Controlled / Watch / Critical risk scoring with reasons |
-| Responsible GenAI | Narrative grounded in structured metrics, explicit governance note |
-| Power BI / Microsoft Fabric thinking | Explicit mapping below and in `ARCHITECTURE.md` |
-| Engineering hygiene | Unit tests, CI, lint, zero-dependency build, deployable static site |
-
-## Demo walkthrough
-
-1. **Run it** (see below) and open the dashboard.
-2. **Executive summary** at the top gives the headline variance, forecast accuracy, and a
-   colour-coded **risk badge** (Controlled / Watch / Critical) with the reason.
-3. **KPI tiles** show Forecast, Actual, Variance, Accuracy, MAPE, and Forecast bias.
-4. **Filter** by customer and product to drill into a segment; every metric, chart, and the
-   narrative recompute instantly.
-5. **Scenario toggle** (Base / Optimistic / Downside) applies a demand-sensitivity band to the
-   actuals so you can stress-test how KPIs and risk move — the forecast plan stays fixed.
-6. **AI-style explainer** narrates the drivers and lists recommended actions, with a governance
-   note stating the text is generated from the metrics, not a model.
-7. **Top customer / product variance** tables rank the drivers.
-8. **Export** the filtered data as **CSV**, or export an **executive-summary Markdown** report.
-9. **Upload CSV** to analyze your own `month, customer, product, forecast, actual` data — it
-   stays in your browser.
-
-## Run
+## Quick start
 
 ```bash
-npm install   # no dependencies, but keeps the workflow familiar
-npm start
+npm start        # serves the app at http://localhost:4174
 ```
 
-Open <http://localhost:4174>.
+That's it — no `npm install` is required, because the app has no dependencies. (`npm install` is
+harmless if you prefer to run it.)
+
+You can also open the app by hosting the `public/` folder on any static host — see
+[Deploy](#deploy).
+
+## Use it with your own data
+
+1. Click **Upload CSV** and choose a file with these columns (header row required):
+
+   ```csv
+   month,customer,product,forecast,actual
+   2026-01,Acme Robotics,Sensor Array,500000,540000
+   2026-02,Acme Robotics,Sensor Array,520000,505000
+   ```
+
+   - `month` is any sortable label (e.g. `2026-01`).
+   - `forecast` and `actual` are numbers (currency values).
+   - One row per customer × product × month.
+
+2. Your data is saved locally and reloaded automatically next time. Click **Load sample data** to
+   clear it and return to the built-in example.
+
+A small **sample dataset** ships with the app so you can try it immediately. The sample names are
+illustrative — replace them with your own data anytime.
+
+## Metrics, briefly
+
+| Metric | Meaning |
+| --- | --- |
+| **Variance** | `actual − forecast` (absolute and % of forecast) |
+| **Forecast accuracy** | `1 − MAPE` — how close the plan was overall |
+| **MAPE** | Mean absolute percentage error across line items |
+| **Forecast bias** | Signed mean error: positive = under-forecasting, negative = over-forecasting |
+| **Rolling 3-month variance** | Variance over a trailing 3-month window |
+| **Risk status** | Controlled (≥95% accuracy, ≤3% variance) / Watch / Critical |
+
+Full formulas are in [`ARCHITECTURE.md`](ARCHITECTURE.md).
+
+## The AI explainer, and why you can trust the numbers
+
+The explainer is a **grounded narrative generator**: it only ever describes the metrics computed on
+the page (variance, MAPE, bias, drivers, risk). It does not call a language model and does not
+predict or invent figures — every sentence maps back to a number you can see. That contract is
+stated in the UI and documented in [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ## Test & lint
 
 ```bash
-npm test        # node --test unit suite for the analytics core
-npm run lint    # structure, sample-data, and analytics smoke check
+npm test        # unit tests for the analytics core (node --test)
+npm run lint    # verifies structure, sample data, and the analytics module
 ```
 
-## Analytics included
+## Deploy
 
-- **Forecast, actual, variance** (absolute and %)
-- **MAPE** (mean absolute percentage error) and **forecast accuracy** (`1 − MAPE`)
-- **Forecast bias** — signed mean error with an under-/over-forecasting tendency
-- **Rolling 3-month variance**
-- **Largest positive and negative variance** line items
-- **Top customer / product variance** drivers
-- **Risk status** — Controlled / Watch / Critical from accuracy and total variance
-- **Scenario sensitivity** — Base / Optimistic / Downside
+The app is a static site in `public/`. Any of these work:
 
-See `ARCHITECTURE.md` for the exact formulas and the AI-explainer governance model.
+- **GitHub Pages** — the included workflow (`.github/workflows/deploy-pages.yml`) publishes on
+  every push to `main`. Enable it under **Settings → Pages → Source: GitHub Actions**.
+- **Netlify / Vercel / Cloudflare Pages** — set the publish directory to `public` (no build
+  command needed).
+- **Any web server** — serve the `public/` folder, or run `npm run build:pages` to stage it into
+  `_site/`.
 
-## How this maps to Power BI / Microsoft Fabric
+## Optional enhancements
 
-This prototype is intentionally a **local, zero-dependency static app** so it is easy to read and
-run. The same design maps cleanly onto a Microsoft BI stack:
-
-| This prototype | Power BI / Fabric equivalent |
-| --- | --- |
-| `public/data/sales.json` sample | Fabric Lakehouse / Warehouse table, or Databricks SQL source |
-| `forecastAnalytics.js` metrics | DAX measures / semantic model (variance, MAPE, accuracy, bias) |
-| KPI tiles + chart | Power BI report visuals and KPI cards |
-| Risk status logic | Calculation group / measure driving conditional formatting |
-| Scenario toggle | What-if parameter |
-| Executive-summary export | Paginated report / subscription, or Copilot narrative |
-| AI-style explainer | Grounded GenAI narrative layer over the semantic model |
-
-> This is **not** a real Power BI implementation. It is a design that demonstrates Power BI /
-> Fabric-shaped thinking in a runnable form.
-
-## Deployment
-
-The app is a static site under `public/`. A GitHub Actions workflow
-(`.github/workflows/deploy-pages.yml`) publishes it to **GitHub Pages** on every push to the
-default branch. To enable it: repository **Settings → Pages → Build and deployment → Source:
-GitHub Actions**. It also runs fine on Vercel or Netlify (publish directory: `public`).
-
-## Future production roadmap
-
-- Connect to a **Fabric Lakehouse / Warehouse** or **Databricks SQL** source instead of JSON.
-- Build a real **Power BI semantic model** and report version.
-- Add a genuine **time-series / ML forecast** with **backtesting** (this prototype analyzes an
-  existing forecast; it does not generate one).
-- Add data lineage, refresh monitoring, and automated data-quality checks.
-- Add role-based access control and per-region / per-account drilldowns.
-- Layer a **grounded GenAI narrative** (retrieval over the semantic model) in place of the
-  deterministic explainer, keeping the same "numbers from analytics, words from AI" contract.
+The app is complete for analyzing forecast vs actual. If you want to extend it, natural next steps
+are: connecting a live data source (warehouse / API) instead of CSV, adding a forecast-generation
+model (time-series / ML) with backtesting, per-region drilldowns, and multi-user hosting with
+accounts. See [`ARCHITECTURE.md`](ARCHITECTURE.md) for how the pieces fit.
 
 ## Project layout
 
 ```
 public/
   index.html            Dashboard markup
-  styles.css            Dark-theme styling
-  app.js                UI logic: filters, scenarios, chart, exports, CSV upload
-  forecastAnalytics.js  Pure analytics + explainer core (browser + Node)
-  data/sales.json       Fictional sample dataset
-test/                   node --test unit suite
+  styles.css            Styling
+  app.js                UI: filters, scenarios, chart, upload, persistence, exports
+  forecastAnalytics.js  Analytics + explainer core (runs in browser and Node)
+  data/sales.json       Built-in sample dataset
+test/                   Unit tests
 scripts/                serve, lint, and Pages build (all dependency-free)
-docs/                   Screenshot(s) used in this README
 ```
 
 ## License

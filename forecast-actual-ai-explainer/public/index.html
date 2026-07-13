@@ -17,13 +17,13 @@
   <body>
     <header>
       <div class="header-top">
-        <span class="pill">Sales Analytics · Forecasting · AI-Style Explanation</span>
-        <span class="pill pill-warn" title="All figures use fictional sample data.">Fictional demo data</span>
+        <span class="pill">Sales Analytics · Forecasting · Variance Explanation</span>
       </div>
       <h1>Forecast vs Actual Dashboard <span class="accent">with AI Explainer</span></h1>
       <p>
-        Analyze forecast variance, score risk, surface the business drivers, and generate
-        explainable next actions — all computed deterministically from structured data.
+        Upload your forecast and actual sales, then analyze variance, score risk, surface the
+        business drivers, and generate explainable next actions — all computed deterministically
+        from your data.
       </p>
     </header>
 
@@ -56,7 +56,7 @@
                 Upload CSV
                 <input id="uploadInput" type="file" accept=".csv,text/csv" hidden />
               </label>
-              <button id="resetBtn" type="button" title="Restore the bundled sample dataset" hidden>Reset data</button>
+              <button id="resetBtn" type="button" title="Clear your saved data and load the built-in sample dataset" hidden>Load sample data</button>
             </div>
           </div>
           <p class="hint" id="dataSourceHint"></p>
@@ -153,8 +153,8 @@
     </main>
 
     <div class="footer">
-      Portfolio prototype by Micheal Wolski · Forecasting, variance analysis &amp; AI-assisted
-      business explanation · <strong>Fictional data only</strong>
+      Forecast vs Actual Dashboard · Your data stays in your browser · Export anytime as CSV or
+      Markdown
     </div>
 
     <script type="module" src="app.js"></script>

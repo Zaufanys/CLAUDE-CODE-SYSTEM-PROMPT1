@@ -4,16 +4,17 @@
 
 ```
 ┌─────────────────────┐     ┌──────────────────────────┐     ┌────────────────────┐
-│ public/data/         │     │ forecastAnalytics.js      │     │ app.js + index.html │
-│ sales.json           │ ──▶ │ (pure functions)          │ ──▶ │ (DOM rendering)     │
-│ fictional sample     │     │ summarize / groupBy /      │     │ KPIs, chart, tables │
-│ OR uploaded CSV      │     │ risk / bias / rolling /    │     │ explainer, exports  │
+│ Your uploaded CSV    │     │ forecastAnalytics.js      │     │ app.js + index.html │
+│ (saved in browser)   │ ──▶ │ (pure functions)          │ ──▶ │ (DOM rendering)     │
+│ OR built-in          │     │ summarize / groupBy /      │     │ KPIs, chart, tables │
+│ sample sales.json    │     │ risk / bias / rolling /    │     │ explainer, exports  │
 └─────────────────────┘     │ explain / markdown export  │     └────────────────────┘
                              └──────────────────────────┘
 ```
 
-- **Data** is either the bundled fictional `sales.json` or a CSV the user uploads in the
-  browser (parsed client-side, never sent anywhere).
+- **Data** is either a CSV you upload in the browser or the built-in sample `sales.json`.
+  Uploaded data is parsed client-side, **saved to `localStorage`** so it survives a refresh, and
+  **never sent to any server**.
 - **Analytics** live in one pure ES module, `public/forecastAnalytics.js`. It has no browser or
   Node dependencies, so the exact same code runs in the browser, in the `node --test` suite, and
   during the lint smoke-check. This is why there is no build step.
@@ -25,7 +26,7 @@
 
 ### Request/compute flow
 
-1. Load records (sample JSON or uploaded CSV).
+1. Load records — your saved data from `localStorage` if present, otherwise the built-in sample.
 2. Filter by customer / product.
 3. Apply the selected scenario (a sensitivity multiplier on actuals).
 4. `summarize`, `explain`, `rankByVariance`, and `rollingVariance` compute every metric.
@@ -38,7 +39,7 @@ Each record is one **customer × product × month** forecast/actual pair:
 | Field | Type | Meaning |
 | --- | --- | --- |
 | `month` | string `YYYY-MM` | Reporting period (sortable) |
-| `customer` | string | OE customer / account |
+| `customer` | string | Customer / account |
 | `product` | string | Product or program |
 | `forecast` | number | Planned sales value for the period |
 | `actual` | number | Realized sales value for the period |
@@ -104,25 +105,23 @@ governance contract is:
 This mirrors the responsible pattern for a real GenAI layer: the language model (or, here, the
 deterministic composer) explains a trusted semantic model — it is not the source of truth.
 
-## 5. Future production architecture (Microsoft Fabric / Databricks / Power BI)
+## 5. Extending it (optional)
 
-```
-Source systems ─▶ Fabric Lakehouse / Warehouse ─▶ Semantic model (DAX measures)
-   (ERP/CRM)          or Databricks SQL              variance, MAPE, accuracy, bias
-        │                    │                                │
-        │                    ▼                                ▼
-        │            ML forecast + backtesting        Power BI report + KPI cards
-        │                                                     │
-        ▼                                                     ▼
- Data quality / lineage / refresh monitoring        Grounded GenAI (Copilot) narrative
-```
+The app is complete and usable as-is: upload data, analyze it, export the results. If you want to
+grow it into a larger system, these are the natural extensions — each is independent, so you can
+add only what you need:
 
-Production extensions, in rough priority order:
-
-1. Replace JSON with a **Fabric Lakehouse/Warehouse** or **Databricks SQL** source.
-2. Move the metric logic into a **Power BI semantic model** (DAX measures + calculation groups).
-3. Add a real **time-series / ML forecast** with **backtesting** and error tracking.
-4. Add **data lineage, refresh monitoring, and automated data-quality** checks.
-5. Add **role-based access control** and richer drilldowns (region / account / program).
-6. Replace the deterministic explainer with a **retrieval-grounded GenAI narrative** over the
-   semantic model — keeping the exact same "numbers from analytics, words from AI" contract.
+1. **Live data source.** Replace the CSV/`localStorage` layer with a fetch from a warehouse or API
+   (e.g. a Fabric Lakehouse/Warehouse, Databricks SQL, or a REST endpoint). Only the data-loading
+   functions in `app.js` change; the analytics core stays identical.
+2. **Forecast generation.** This app *analyzes* an existing forecast. Add a time-series / ML model
+   (with backtesting and error tracking) if you also want to *produce* forecasts.
+3. **Shared semantic layer.** Move the metric definitions into a BI semantic model (e.g. Power BI
+   DAX measures) if you want the same numbers reused across reports.
+4. **Data quality & lineage.** Add refresh monitoring and automated data-quality checks for a
+   scheduled feed.
+5. **Multi-user hosting.** Add accounts and role-based access with per-region / per-account
+   drilldowns if the tool needs to serve a team rather than a single browser.
+6. **Retrieval-grounded narrative.** Swap the deterministic explainer for an LLM narrative that
+   reads the computed metrics — keeping the same "numbers from analytics, words from the
+   explainer" contract so figures are never invented.

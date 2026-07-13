@@ -14,11 +14,12 @@ import {
 
 const $ = (id) => document.getElementById(id);
 const REQUIRED_COLUMNS = ["month", "customer", "product", "forecast", "actual"];
+const STORAGE_KEY = "forecast-actual:dataset";
 
 const state = {
-  baseRows: [], // dataset as loaded (sample or uploaded), unscaled
+  baseRows: [], // dataset as loaded (sample or your saved data), unscaled
   working: [], // after customer/product filter + scenario
-  source: "sample",
+  source: "sample", // "sample" or "saved"
 };
 
 /* -------------------------------- data loading ------------------------------- */
@@ -29,9 +30,39 @@ async function loadSampleData() {
   return res.json();
 }
 
+// Your uploaded data is persisted locally so it survives a refresh or a return
+// visit. Everything stays in this browser — nothing is uploaded to a server.
+function loadSavedDataset() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const rows = JSON.parse(raw);
+    return Array.isArray(rows) && rows.length ? rows : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveDataset(rows) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+  } catch {
+    /* storage may be unavailable (private mode / quota); degrade to in-memory */
+  }
+}
+
+function clearSavedDataset() {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 function setDataset(rows, source) {
   state.baseRows = rows;
   state.source = source;
+  if (source === "saved") saveDataset(rows);
   populateFilters(rows);
   $("resetBtn").hidden = source === "sample";
   updateDataSourceHint();
@@ -41,8 +72,8 @@ function setDataset(rows, source) {
 function updateDataSourceHint() {
   const label =
     state.source === "sample"
-      ? "Showing bundled fictional sample data."
-      : "Showing uploaded CSV data (kept in your browser only).";
+      ? "Showing the built-in sample dataset — upload a CSV to replace it with your own data."
+      : "Showing your data, saved in this browser. Upload another CSV to replace it.";
   $("dataSourceHint").textContent = `${label} ${state.baseRows.length} records loaded.`;
 }
 
@@ -368,7 +399,7 @@ function handleUpload(event) {
     try {
       const records = csvToRecords(String(reader.result));
       if (!records.length) throw new Error("No data rows found.");
-      setDataset(records, "upload");
+      setDataset(records, "saved");
     } catch (err) {
       alert(`Could not read CSV: ${err.message}`);
     } finally {
@@ -399,15 +430,25 @@ function wireEvents() {
   $("exportCsvBtn").addEventListener("click", exportCsv);
   $("exportMdBtn").addEventListener("click", exportMarkdown);
   $("uploadInput").addEventListener("change", handleUpload);
-  $("resetBtn").addEventListener("click", () => loadSampleData().then((rows) => setDataset(rows, "sample")));
+  $("resetBtn").addEventListener("click", () => {
+    if (!confirm("Clear your saved data and load the built-in sample dataset?")) return;
+    clearSavedDataset();
+    loadSampleData().then((rows) => setDataset(rows, "sample"));
+  });
   window.addEventListener("resize", () => drawChart(state.working));
 }
 
 async function init() {
   wireEvents();
   try {
-    const rows = await loadSampleData();
-    setDataset(rows, "sample");
+    // Prefer your previously saved data; fall back to the built-in sample.
+    const saved = loadSavedDataset();
+    if (saved) {
+      setDataset(saved, "saved");
+    } else {
+      const rows = await loadSampleData();
+      setDataset(rows, "sample");
+    }
   } catch (err) {
     $("execHeadline").textContent = `Failed to load data: ${err.message}`;
   }
