@@ -36,6 +36,9 @@ harmless if you prefer to run it.)
 You can also open the app by hosting the `public/` folder on any static host — see
 [Deploy](#deploy).
 
+> **Setting it up from scratch (or handing it to a coding agent)?** See [`SETUP.md`](SETUP.md) — it
+> has step-by-step install instructions and a ready-to-paste prompt for Cowork / Claude Code.
+
 ## Use it with your own data
 
 1. Click **Upload CSV** and choose a file with these columns (header row required):
