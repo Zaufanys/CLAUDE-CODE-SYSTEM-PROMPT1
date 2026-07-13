@@ -1,0 +1,4 @@
+{
+  "title": "RFQ with cybersecurity / software requirement",
+  "document": "Request for Quote: Connected Gateway ECU\nCustomer: Nordwind Automotive\nProgram: NW-CX Connected Platform\nRFQ ID: RFQ-2026-EE-330\nDue Date: 2026-09-15\nTarget SOP: 2028-01-10\nRegion: Europe\nProduct: Connected vehicle gateway ECU\nEstimated Annual Volume: 92000 units\nRequested Price Target: 128.50 EUR per unit\nRequirements:\n- Provide UNECE R155/R156 cybersecurity and software update documentation\n- Describe the over-the-air software update process and security documentation\n- Provide a supplier constraint and semiconductor shortage risk assessment\n- Submit response via the customer portal by due date\n\nNotes:\nSecurity documentation is mandatory for this connected program. There is a known semiconductor supply risk on the gateway SoC.\n"
+}

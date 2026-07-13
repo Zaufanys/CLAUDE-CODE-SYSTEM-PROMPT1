@@ -1,0 +1,7 @@
+{
+  "samples": [
+    { "id": "complete", "label": "Complete OE RFQ", "file": "sample-rfq.json" },
+    { "id": "incomplete", "label": "RFQ missing key fields", "file": "sample-rfq-incomplete.json" },
+    { "id": "cyber", "label": "RFQ with cybersecurity / software requirement", "file": "sample-rfq-cyber.json" }
+  ]
+}

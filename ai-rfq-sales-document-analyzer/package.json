@@ -1,0 +1,27 @@
+{
+  "name": "ai-rfq-sales-document-analyzer",
+  "version": "1.2.0",
+  "description": "Local-first RFQ and sales-document analyzer: structured extraction, missing-field and risk detection, source evidence, data-quality checks, a human-in-the-loop review workflow, and a persistent reviewer queue.",
+  "type": "module",
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "serve": "node scripts/serve.mjs",
+    "test": "node --test",
+    "lint": "node scripts/lint.mjs"
+  },
+  "keywords": [
+    "ai",
+    "rfq",
+    "sales",
+    "document-automation",
+    "rag",
+    "structured-output",
+    "human-in-the-loop",
+    "local-first"
+  ],
+  "author": "Micheal Wolski",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  }
+}
