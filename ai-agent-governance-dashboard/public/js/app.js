@@ -1,7 +1,7 @@
-// Dashboard controller for the AI Agent Governance Dashboard.
-// Loads fictional traces, scores them with the shared governance engine, and
-// wires up filtering, a trace timeline, an approval queue, a human reviewer
-// workflow (persisted in localStorage), and audit export.
+// Dashboard controller. Talks to the governance service REST API: it loads
+// scored traces, records human decisions, and exports audit evidence — all
+// persisted server-side. The governance engine is shared with the backend, so
+// the risk shown here matches the risk stored at ingestion time.
 import { summarizeTraces, RULES, FILTERS } from "./governanceEngine.js";
 
 // --- tiny helpers ------------------------------------------------------------
@@ -24,41 +24,30 @@ const shortTime = (ts) => {
 };
 const riskClass = (level) => (level === "High" ? "bad" : level === "Medium" ? "warn" : "good");
 
-// --- persistence -------------------------------------------------------------
-const DECISIONS_KEY = "aiagd.decisions.v1";
-const REVIEWER_KEY = "aiagd.reviewer.v1";
-const store = {
-  load(key, fallback) {
-    try {
-      const raw = localStorage.getItem(key);
-      return raw == null ? fallback : JSON.parse(raw);
-    } catch {
-      return fallback;
-    }
-  },
-  save(key, value) {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch {
-      /* storage unavailable (e.g. private mode) — decisions stay in-memory */
-    }
-  },
-};
+// --- API layer ---------------------------------------------------------------
+// Any 401 means the session expired — bounce to the login page.
+async function api(path, opts = {}) {
+  const res = await fetch(path, {
+    headers: { "Content-Type": "application/json" },
+    ...opts,
+  });
+  if (res.status === 401) {
+    location.replace("login.html");
+    throw new Error("unauthenticated");
+  }
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || `Request failed (${res.status})`);
+  }
+  return res;
+}
 
 // --- state -------------------------------------------------------------------
-const state = {
-  summary: null,
-  decisions: store.load(DECISIONS_KEY, {}),
-  reviewer: store.load(REVIEWER_KEY, ""),
-  activeChips: new Set(),
-  selectedId: null,
-};
-
+const state = { summary: null, user: null, activeChips: new Set(), selectedId: null };
 const DECISION_LABEL = { approved: "Approved", rejected: "Rejected", escalated: "Escalated" };
 
 function decisionStatus(trace) {
-  const d = state.decisions[trace.id];
-  if (d && d.status) return d.status;
+  if (trace.decision && trace.decision.status) return trace.decision.status;
   return trace.approvalRequired ? "pending" : "none";
 }
 
@@ -130,18 +119,20 @@ function renderTimeline() {
   const rows = [...state.summary.scored].sort(
     (a, b) => new Date(a.timestamp) - new Date(b.timestamp),
   );
-  $("timeline").innerHTML = rows
-    .map((t) => {
-      const sel = t.id === state.selectedId ? " selected" : "";
-      return `<button class="tl-node${sel}" data-id="${t.id}" title="${esc(t.agent)} — ${esc(
-        t.governance.level,
-      )} risk">
+  $("timeline").innerHTML = rows.length
+    ? rows
+        .map((t) => {
+          const sel = t.id === state.selectedId ? " selected" : "";
+          return `<button class="tl-node${sel}" data-id="${esc(t.id)}" title="${esc(t.agent)} — ${esc(
+            t.governance.level,
+          )} risk">
         <span class="tl-dot ${riskClass(t.governance.level)}-bg"></span>
         <span class="tl-time">${esc(shortTime(t.timestamp))}</span>
         <span class="tl-agent">${esc(t.agent)}</span>
       </button>`;
-    })
-    .join("");
+        })
+        .join("")
+    : `<p class="muted small">No traces yet — send one via the ingestion API below.</p>`;
 }
 
 function renderQueue() {
@@ -153,16 +144,16 @@ function renderQueue() {
   }
   $("approvalQueue").innerHTML = pending
     .map(
-      (t) => `<div class="queue-item" data-id="${t.id}">
+      (t) => `<div class="queue-item" data-id="${esc(t.id)}">
         <div class="queue-main">
           <span class="tag ${riskClass(t.governance.level)}">${esc(t.governance.level)}</span>
-          <button class="link" data-open="${t.id}">${esc(t.id)} · ${esc(t.agent)}</button>
+          <button class="link" data-open="${esc(t.id)}">${esc(t.id)} · ${esc(t.agent)}</button>
           <span class="muted small">${esc(t.governance.reasons[0] || "Approval required")}</span>
         </div>
         <div class="row queue-actions">
-          <button class="btn approve xs" data-quick="approved" data-id="${t.id}">Approve</button>
-          <button class="btn reject xs" data-quick="rejected" data-id="${t.id}">Reject</button>
-          <button class="btn escalate xs" data-quick="escalated" data-id="${t.id}">Escalate</button>
+          <button class="btn approve xs" data-quick="approved" data-id="${esc(t.id)}">Approve</button>
+          <button class="btn reject xs" data-quick="rejected" data-id="${esc(t.id)}">Reject</button>
+          <button class="btn escalate xs" data-quick="escalated" data-id="${esc(t.id)}">Escalate</button>
         </div>
       </div>`,
     )
@@ -188,7 +179,7 @@ function renderTable() {
             .join(" ")
         : `<span class="muted">No issues</span>`;
       const sel = t.id === state.selectedId ? " selected" : "";
-      return `<tr class="${sel}" data-id="${t.id}">
+      return `<tr class="${sel}" data-id="${esc(t.id)}">
         <td>${esc(t.id)}<br /><span class="muted small">${esc(shortTime(t.timestamp))}</span></td>
         <td>${esc(t.agent)}</td>
         <td class="${cls}">${esc(t.governance.level)} <span class="muted">(${t.governance.score})</span></td>
@@ -212,8 +203,7 @@ function renderSelected() {
   $("reviewer").hidden = false;
   $("selectedTitle").textContent = `${trace.id} · ${trace.agent}`;
 
-  // Reviewer decision state.
-  const decision = state.decisions[trace.id];
+  const decision = trace.decision;
   $("reviewerNote").value = decision?.note || "";
   document.querySelectorAll("#decisionButtons [data-decision]").forEach((btn) => {
     btn.classList.toggle("active", !!decision && decision.status === btn.dataset.decision);
@@ -226,7 +216,6 @@ function renderSelected() {
       ? "Awaiting decision — approval required."
       : "No decision required.";
 
-  // Per-trace policy checklist: every rule, pass or fail.
   $("policyChecklist").innerHTML = RULES.map((r) => {
     const triggered = trace.governance.categories[r.id];
     return `<li class="${triggered ? "fail" : "pass"}">
@@ -237,9 +226,9 @@ function renderSelected() {
     </li>`;
   }).join("");
 
-  // Raw trace (with computed governance + any recorded decision).
+  const { decision: _d, governance, ...rawTrace } = trace;
   $("traceJson").textContent = JSON.stringify(
-    { ...trace, decision: decision || null },
+    { ...rawTrace, governance, decision: decision || null },
     null,
     2,
   );
@@ -252,22 +241,61 @@ function select(id) {
   document.getElementById("selectedTitle")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
-function setDecision(id, status) {
-  const note = state.selectedId === id ? $("reviewerNote").value.trim() : state.decisions[id]?.note || "";
-  state.decisions[id] = {
-    status,
-    note,
-    reviewer: state.reviewer || "reviewer",
-    timestamp: new Date().toISOString(),
-  };
-  store.save(DECISIONS_KEY, state.decisions);
+async function loadTraces() {
+  const res = await api("api/traces");
+  const { traces } = await res.json();
+  state.summary = summarizeTraces(traces);
+  $("agentFilter").innerHTML =
+    `<option value="">All</option>` +
+    unique(traces, "agent")
+      .map((a) => `<option>${esc(a)}</option>`)
+      .join("");
   render();
 }
 
-function clearDecision(id) {
-  delete state.decisions[id];
-  store.save(DECISIONS_KEY, state.decisions);
-  render();
+async function setDecision(id, status) {
+  const note = state.selectedId === id ? $("reviewerNote").value.trim() : "";
+  try {
+    await api("api/decisions", {
+      method: "POST",
+      body: JSON.stringify({ traceId: id, status, note }),
+    });
+    await loadTraces();
+  } catch (err) {
+    if (err.message !== "unauthenticated") alert(`Could not save decision: ${err.message}`);
+  }
+}
+
+async function clearDecision(id) {
+  try {
+    await api(`api/decisions/${encodeURIComponent(id)}`, { method: "DELETE" });
+    await loadTraces();
+  } catch (err) {
+    if (err.message !== "unauthenticated") alert(`Could not clear decision: ${err.message}`);
+  }
+}
+
+async function exportAudit() {
+  try {
+    const res = await api("api/audit");
+    const data = await res.json();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "ai_agent_governance_audit.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  } catch (err) {
+    if (err.message !== "unauthenticated") alert(`Export failed: ${err.message}`);
+  }
+}
+
+async function logout() {
+  try {
+    await fetch("api/auth/logout", { method: "POST" });
+  } finally {
+    location.replace("login.html");
+  }
 }
 
 function buildChips() {
@@ -290,50 +318,13 @@ function resetFilters() {
   renderTable();
 }
 
-function exportJson() {
-  const filtered = getFiltered();
-  const s = state.summary;
-  const payload = {
-    generatedAt: new Date().toISOString(),
-    disclaimer:
-      "Fictional demonstration data. Contains no real customer, pricing, or confidential information.",
-    filtersApplied: {
-      risk: $("riskFilter").value || "all",
-      agent: $("agentFilter").value || "all",
-      quickFilters: [...state.activeChips],
-    },
-    summary: {
-      total: s.total,
-      high: s.high,
-      medium: s.medium,
-      low: s.low,
-      approvalsRequired: s.approvalsRequired,
-      approvalsMissing: s.approvalsMissing,
-      writeTools: s.writeTools,
-      avgGroundedness: Number(s.avgGroundedness.toFixed(3)),
-      exportedTraceCount: filtered.length,
-    },
-    traces: filtered.map((t) => ({ ...t, decision: state.decisions[t.id] || null })),
-  };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "ai_agent_governance_audit.json";
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
 // --- event wiring ------------------------------------------------------------
 function wireEvents() {
   $("riskFilter").addEventListener("change", renderTable);
   $("agentFilter").addEventListener("change", renderTable);
   $("resetBtn").addEventListener("click", resetFilters);
-  $("exportBtn").addEventListener("click", exportJson);
-
-  $("reviewerName").addEventListener("input", (e) => {
-    state.reviewer = e.target.value;
-    store.save(REVIEWER_KEY, state.reviewer);
-  });
+  $("exportBtn").addEventListener("click", exportAudit);
+  $("logoutBtn").addEventListener("click", logout);
 
   $("quickFilters").addEventListener("click", (e) => {
     const chip = e.target.closest(".chip");
@@ -357,10 +348,7 @@ function wireEvents() {
 
   $("approvalQueue").addEventListener("click", (e) => {
     const quick = e.target.closest("[data-quick]");
-    if (quick) {
-      setDecision(quick.dataset.id, quick.dataset.quick);
-      return;
-    }
+    if (quick) return void setDecision(quick.dataset.id, quick.dataset.quick);
     const open = e.target.closest("[data-open]");
     if (open) select(open.dataset.open);
   });
@@ -376,27 +364,40 @@ function wireEvents() {
 
 // --- boot --------------------------------------------------------------------
 async function boot() {
-  buildChips();
-  $("reviewerName").value = state.reviewer;
-  wireEvents();
+  // Gate on authentication before rendering anything.
+  let me;
   try {
-    const res = await fetch("data/traces.json");
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const rows = await res.json();
-    state.summary = summarizeTraces(rows);
-    $("agentFilter").innerHTML =
-      `<option value="">All</option>` +
-      unique(rows, "agent")
-        .map((a) => `<option>${esc(a)}</option>`)
-        .join("");
-    render();
-  } catch (err) {
+    const res = await fetch("api/auth/me");
+    if (!res.ok) {
+      location.replace("login.html");
+      return;
+    }
+    me = (await res.json()).user;
+  } catch {
     document.querySelector("main").insertAdjacentHTML(
       "afterbegin",
-      `<section class="card span12"><p class="bad">Failed to load traces: ${esc(
-        err.message,
-      )}. Run <code>npm start</code> and open the served URL (fetch does not work from <code>file://</code>).</p></section>`,
+      `<section class="card span12"><p class="bad">Cannot reach the governance service. Start it with <code>npm start</code>.</p></section>`,
     );
+    return;
+  }
+
+  state.user = me;
+  $("userBadge").textContent = `Signed in as ${me.username}`;
+  $("userBadge").hidden = false;
+  $("logoutBtn").hidden = false;
+
+  buildChips();
+  wireEvents();
+
+  try {
+    await loadTraces();
+  } catch (err) {
+    if (err.message !== "unauthenticated") {
+      document.querySelector("main").insertAdjacentHTML(
+        "afterbegin",
+        `<section class="card span12"><p class="bad">Failed to load traces: ${esc(err.message)}</p></section>`,
+      );
+    }
   }
 }
 

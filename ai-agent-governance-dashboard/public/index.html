@@ -21,6 +21,8 @@
         <nav class="row nav">
           <a class="btn ghost" href="index.html" aria-current="page">Dashboard</a>
           <a class="btn ghost" href="mapping.html">Observability mapping</a>
+          <span class="user-badge" id="userBadge" hidden></span>
+          <button class="btn ghost" id="logoutBtn" hidden>Log out</button>
         </nav>
       </div>
       <h1>AI Agent Governance Dashboard</h1>
@@ -30,8 +32,8 @@
         audit-ready evidence.
       </p>
       <p class="disclaimer" role="note">
-        <strong>Fictional data.</strong> Every trace below is synthetic and illustrative. This
-        prototype contains no real customer, pricing, or Bosch-confidential information.
+        Traces are stored in the service database. Example traces are seeded on first run — send
+        your own with the ingestion API below, or clear the database to start empty.
       </p>
     </header>
 
@@ -53,10 +55,6 @@
               <label
                 >Agent
                 <select id="agentFilter"><option value="">All</option></select>
-              </label>
-              <label
-                >Reviewer
-                <input id="reviewerName" type="text" placeholder="your name" autocomplete="off" />
               </label>
             </div>
             <div class="row wrap">
@@ -162,6 +160,26 @@
           </div>
         </section>
 
+        <!-- Ingestion API -------------------------------------------------->
+        <section class="card span12">
+          <h2>Send traces (ingestion API)</h2>
+          <p class="muted small">
+            Agents and pipelines post traces to <code>POST /api/ingest</code> with an API-key header.
+            Each trace is scored by the governance engine and appears here immediately.
+          </p>
+          <pre class="code-block">curl -X POST http://localhost:4175/api/ingest \
+  -H "Authorization: Bearer &lt;your-api-key&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agent": "RFQ Copilot",
+    "input": "Summarize RFQ-2026-PS-114",
+    "tools": [{ "name": "search_rfq_docs", "type": "read" }],
+    "approvalRequired": true,
+    "approved": false,
+    "groundedness": 0.9
+  }'</pre>
+        </section>
+
         <!-- Global policy checklist ---------------------------------------->
         <section class="card span12">
           <h2>Governance principles</h2>
@@ -184,7 +202,7 @@
     </main>
 
     <div class="footer">
-      Portfolio prototype by Micheal Wolski · AI agent governance, auditability &amp; cybersecurity-aware digitalization ·
+      AI Agent Governance Dashboard · agent traceability, human approvals &amp; audit-ready evidence ·
       <a href="mapping.html">Observability mapping</a>
     </div>
 

@@ -249,12 +249,10 @@ test("FILTERS predicates operate on scored traces", () => {
   assert.equal(FILTERS.low_groundedness.test(risky), true);
 });
 
-// --- the shipped dataset is valid and demonstrates every rule ----------------
-test("shipped traces.json exercises all rules and is well-formed", () => {
+// --- the shipped seed dataset is valid and demonstrates every rule -----------
+test("seed dataset exercises all rules and is well-formed", () => {
   const here = path.dirname(fileURLToPath(import.meta.url));
-  const rows = JSON.parse(
-    readFileSync(path.join(here, "..", "public", "data", "traces.json"), "utf8"),
-  );
+  const rows = JSON.parse(readFileSync(path.join(here, "..", "server", "seed-data.json"), "utf8"));
   assert.ok(Array.isArray(rows) && rows.length >= 5);
   const summary = summarizeTraces(rows);
   const fired = new Set(summary.scored.flatMap((t) => t.governance.flags.map((f) => f.id)));

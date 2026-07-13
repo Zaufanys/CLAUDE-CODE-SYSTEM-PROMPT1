@@ -7,3 +7,9 @@ coverage/
 npm-debug.log*
 .cache/
 dist/
+
+# Runtime database (created on first start)
+data/
+*.db
+*.db-shm
+*.db-wal
