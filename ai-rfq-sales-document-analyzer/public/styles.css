@@ -95,8 +95,18 @@ button, .btn {
   cursor: pointer;
   text-decoration: none;
   font: inherit;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 button:hover, .btn:hover { background: rgba(255, 255, 255, 0.14); }
+@media (max-width: 480px) {
+  button, .btn {
+    padding: 12px 16px;
+    font-size: 16px;
+  }
+}
 button.primary, .btn.primary {
   background: linear-gradient(135deg, var(--accent), #99d5ff);
   color: #06101f;
@@ -130,6 +140,10 @@ textarea {
   resize: vertical;
 }
 textarea.short { min-height: 90px; }
+@media (max-width: 480px) {
+  textarea { min-height: 200px; }
+  textarea.short { min-height: 70px; }
+}
 .dropzone {
   position: relative;
   border-radius: 14px;
@@ -231,8 +245,89 @@ pre {
   background: rgba(90, 167, 255, 0.1);
 }
 @media (max-width: 900px) {
-  .grid { grid-template-columns: 1fr; }
+  .grid { grid-template-columns: 1fr; gap: 14px; }
   .span2, .span3, .span4, .span5, .span6, .span7, .span8 {
     grid-column: span 1;
+  }
+}
+@media (max-width: 640px) {
+  header {
+    padding: 20px clamp(12px, 2vw, 24px);
+  }
+  header h1 {
+    font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+  }
+  header p {
+    font-size: 0.9rem;
+  }
+  main {
+    padding: 16px clamp(12px, 2vw, 24px);
+  }
+  .grid { gap: 12px; }
+  .card {
+    padding: 14px;
+  }
+  .pill {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+  }
+  .kpi strong {
+    font-size: 1.4rem;
+  }
+  h2, h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+  }
+  .row {
+    gap: 8px;
+  }
+  table {
+    font-size: 0.9rem;
+  }
+  th, td {
+    padding: 8px;
+  }
+  textarea, input, select {
+    font-size: 16px;
+    padding: 10px;
+  }
+  label {
+    font-size: 0.8rem;
+    margin: 0.5rem 0 0.25rem;
+  }
+  .notice {
+    font-size: 0.9rem;
+    padding: 10px 12px;
+  }
+  pre {
+    padding: 10px;
+    font-size: 0.85rem;
+    max-height: 300px;
+  }
+  .footer {
+    padding: 16px;
+    font-size: 0.85rem;
+  }
+}
+@media (max-width: 480px) {
+  .pill {
+    font-size: 0.65rem;
+    padding: 3px 6px;
+  }
+  h2 {
+    font-size: 1rem;
+  }
+  .row {
+    flex-direction: column;
+    gap: 6px;
+  }
+  button, .btn {
+    width: 100%;
+  }
+  table {
+    font-size: 0.8rem;
+  }
+  th, td {
+    padding: 6px;
   }
 }
