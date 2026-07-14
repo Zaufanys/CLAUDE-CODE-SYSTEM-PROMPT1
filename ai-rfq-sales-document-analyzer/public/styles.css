@@ -24,48 +24,50 @@ body {
   line-height: 1.5;
 }
 header {
-  padding: 28px clamp(16px, 3vw, 42px);
+  padding: 16px 12px;
   border-bottom: 1px solid var(--line);
   background: rgba(8, 12, 28, 0.72);
   backdrop-filter: blur(16px);
 }
 header h1 {
   margin: 0;
-  font-size: clamp(1.6rem, 3vw, 2.7rem);
+  font-size: 1.4rem;
   letter-spacing: -0.04em;
 }
 header p {
   margin: 0.4rem 0 0;
   color: var(--muted);
-  max-width: 980px;
+  max-width: 100%;
+  font-size: 0.9rem;
 }
 main {
-  padding: 24px clamp(16px, 3vw, 42px);
-  max-width: 1320px;
+  padding: 16px 12px;
+  max-width: 100%;
   margin: auto;
 }
 .grid {
   display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 16px;
+  grid-template-columns: 1fr;
+  gap: 12px;
 }
 .card {
-  grid-column: span 12;
+  grid-column: span 1;
   background: rgba(18, 26, 53, 0.88);
   border: 1px solid var(--line);
   border-radius: var(--r);
-  padding: 18px;
+  padding: 14px;
   box-shadow: var(--shadow);
 }
-.span2 { grid-column: span 2; }
-.span3 { grid-column: span 3; }
-.span4 { grid-column: span 4; }
-.span5 { grid-column: span 5; }
-.span6 { grid-column: span 6; }
-.span7 { grid-column: span 7; }
-.span8 { grid-column: span 8; }
+.span2 { grid-column: span 1; }
+.span3 { grid-column: span 1; }
+.span4 { grid-column: span 1; }
+.span5 { grid-column: span 1; }
+.span6 { grid-column: span 1; }
+.span7 { grid-column: span 1; }
+.span8 { grid-column: span 1; }
 h2, h3 {
   margin-top: 0;
+  font-size: 1rem;
   letter-spacing: -0.02em;
 }
 .muted { color: var(--muted); }
@@ -73,40 +75,36 @@ h2, h3 {
   display: inline-flex;
   gap: 6px;
   align-items: center;
-  padding: 5px 10px;
+  padding: 4px 8px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.06);
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.65rem;
 }
 .row {
   display: flex;
+  flex-direction: column;
   flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
+  gap: 8px;
+  align-items: stretch;
 }
 button, .btn {
   border: 1px solid var(--line);
   border-radius: 13px;
   background: rgba(255, 255, 255, 0.08);
   color: var(--text);
-  padding: 10px 14px;
+  padding: 12px 14px;
   cursor: pointer;
   text-decoration: none;
-  font: inherit;
+  font: 16px inherit;
   min-height: 44px;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
 }
 button:hover, .btn:hover { background: rgba(255, 255, 255, 0.14); }
-@media (max-width: 480px) {
-  button, .btn {
-    padding: 12px 16px;
-    font-size: 16px;
-  }
-}
 button.primary, .btn.primary {
   background: linear-gradient(135deg, var(--accent), #99d5ff);
   color: #06101f;
@@ -131,19 +129,15 @@ textarea, input, select {
   color: var(--text);
   border: 1px solid var(--line);
   border-radius: 14px;
-  padding: 12px;
+  padding: 10px;
   outline: none;
-  font: inherit;
+  font: 16px inherit;
 }
 textarea {
-  min-height: 280px;
+  min-height: 200px;
   resize: vertical;
 }
-textarea.short { min-height: 90px; }
-@media (max-width: 480px) {
-  textarea { min-height: 200px; }
-  textarea.short { min-height: 70px; }
-}
+textarea.short { min-height: 70px; }
 .dropzone {
   position: relative;
   border-radius: 14px;
@@ -176,9 +170,9 @@ code {
 }
 label {
   display: block;
-  margin: 0.6rem 0 0.3rem;
+  margin: 0.5rem 0 0.25rem;
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 .kpi {
   background: rgba(255, 255, 255, 0.05);
@@ -187,7 +181,7 @@ label {
   padding: 14px;
 }
 .kpi strong {
-  font-size: 1.65rem;
+  font-size: 1.3rem;
   display: block;
 }
 .good { color: var(--good); }
@@ -198,16 +192,17 @@ table {
   border-collapse: collapse;
   overflow: hidden;
   border-radius: 14px;
+  font-size: 0.8rem;
 }
 th, td {
   text-align: left;
-  padding: 11px;
+  padding: 6px;
   border-bottom: 1px solid var(--line);
   vertical-align: top;
 }
 th {
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: 0.75rem;
 }
 pre {
   white-space: pre-wrap;
@@ -215,9 +210,10 @@ pre {
   background: rgba(5, 9, 20, 0.72);
   border: 1px solid var(--line);
   border-radius: 14px;
-  padding: 14px;
-  max-height: 420px;
+  padding: 10px;
+  max-height: 300px;
   overflow: auto;
+  font-size: 0.8rem;
 }
 .bar {
   height: 11px;
@@ -234,100 +230,125 @@ pre {
   transition: width 0.35s ease;
 }
 .footer {
-  padding: 24px;
+  padding: 16px;
   color: var(--muted);
   text-align: center;
+  font-size: 0.8rem;
 }
 .notice {
   border-left: 4px solid var(--accent);
-  padding: 12px 14px;
+  padding: 10px 12px;
   border-radius: 12px;
   background: rgba(90, 167, 255, 0.1);
+  font-size: 0.85rem;
 }
-@media (max-width: 900px) {
-  .grid { grid-template-columns: 1fr; gap: 14px; }
-  .span2, .span3, .span4, .span5, .span6, .span7, .span8 {
-    grid-column: span 1;
-  }
-}
-@media (max-width: 640px) {
+
+@media (min-width: 640px) {
   header {
-    padding: 20px clamp(12px, 2vw, 24px);
+    padding: 20px 24px;
   }
   header h1 {
     font-size: clamp(1.3rem, 2.5vw, 1.8rem);
   }
   header p {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
   }
   main {
-    padding: 16px clamp(12px, 2vw, 24px);
+    padding: 20px 24px;
+    max-width: 1000px;
   }
-  .grid { gap: 12px; }
+  .grid {
+    gap: 14px;
+  }
   .card {
-    padding: 14px;
+    padding: 16px;
   }
   .pill {
     font-size: 0.7rem;
-    padding: 4px 8px;
-  }
-  .kpi strong {
-    font-size: 1.4rem;
-  }
-  h2, h3 {
-    font-size: 1.1rem;
-    margin-bottom: 0.5rem;
-  }
-  .row {
-    gap: 8px;
-  }
-  table {
-    font-size: 0.9rem;
-  }
-  th, td {
-    padding: 8px;
-  }
-  textarea, input, select {
-    font-size: 16px;
-    padding: 10px;
-  }
-  label {
-    font-size: 0.8rem;
-    margin: 0.5rem 0 0.25rem;
-  }
-  .notice {
-    font-size: 0.9rem;
-    padding: 10px 12px;
-  }
-  pre {
-    padding: 10px;
-    font-size: 0.85rem;
-    max-height: 300px;
-  }
-  .footer {
-    padding: 16px;
-    font-size: 0.85rem;
-  }
-}
-@media (max-width: 480px) {
-  .pill {
-    font-size: 0.65rem;
-    padding: 3px 6px;
+    padding: 5px 10px;
   }
   h2 {
-    font-size: 1rem;
+    font-size: 1.1rem;
   }
   .row {
-    flex-direction: column;
-    gap: 6px;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
   }
   button, .btn {
-    width: 100%;
+    width: auto;
   }
   table {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
   }
   th, td {
-    padding: 6px;
+    padding: 10px;
+  }
+  textarea {
+    min-height: 200px;
+  }
+}
+
+@media (min-width: 900px) {
+  header {
+    padding: 28px clamp(24px, 3vw, 42px);
+  }
+  header h1 {
+    font-size: clamp(1.6rem, 3vw, 2.7rem);
+  }
+  main {
+    padding: 24px clamp(24px, 3vw, 42px);
+    max-width: 1320px;
+  }
+  .grid {
+    grid-template-columns: repeat(12, 1fr);
+    gap: 16px;
+  }
+  .card {
+    padding: 18px;
+  }
+  .span2 { grid-column: span 2; }
+  .span3 { grid-column: span 3; }
+  .span4 { grid-column: span 4; }
+  .span5 { grid-column: span 5; }
+  .span6 { grid-column: span 6; }
+  .span7 { grid-column: span 7; }
+  .span8 { grid-column: span 8; }
+  .pill {
+    font-size: 0.78rem;
+    padding: 5px 10px;
+  }
+  h2 {
+    font-size: 1.15rem;
+  }
+  .kpi strong {
+    font-size: 1.65rem;
+  }
+  .row {
+    gap: 10px;
+  }
+  table {
+    font-size: 0.92rem;
+  }
+  th, td {
+    padding: 11px;
+  }
+  textarea {
+    min-height: 280px;
+  }
+  textarea.short {
+    min-height: 90px;
+  }
+  .footer {
+    padding: 24px;
+    font-size: 0.9rem;
+  }
+  .notice {
+    padding: 12px 14px;
+    font-size: 0.95rem;
+  }
+  pre {
+    max-height: 420px;
+    font-size: 0.9rem;
   }
 }
