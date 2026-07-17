@@ -1,0 +1,20 @@
+# CI for the standalone ai-agent-governance-dashboard repository.
+# (When this project lives inside another repo, the root-level workflow runs
+# instead — GitHub only executes workflows found at the true repository root.)
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm test
+      - run: npm run lint

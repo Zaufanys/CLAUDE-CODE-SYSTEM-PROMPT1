@@ -1,0 +1,15 @@
+node_modules/
+.env
+.env.local
+.DS_Store
+coverage/
+*.log
+npm-debug.log*
+.cache/
+dist/
+
+# Runtime database (created on first start)
+data/
+*.db
+*.db-shm
+*.db-wal
