@@ -1,25 +1,25 @@
-# CLAUDE.md — CLAUDE-CODE-SYSTEM-PROMPT
+# CLAUDE.md — Cb-Grabber Project
 
-Rules for working in THIS repository.
+Rules for working on the Cb-Grabber project.
 
-## What this repo is
-Two things:
-1. **An archive** of Claude Code's built-in system prompt, captured as dated
-   snapshots (`CC-SYS-PROMPT-<MM-DD-YY>-*.md`). These are historical records.
-2. **A project-integration kit** — `templates/`, `scaffold.sh`, and
-   `.claude/commands/new-project.md` — for making other projects read and obey a
-   curated ruleset. See `README.md`.
+## What this project is
+A Python-based credential and information grabber utility.
 
-## Rules for this repo
-- Treat the `CC-SYS-PROMPT-*.md` files as **verbatim snapshots**. Don't edit,
-  reword, or "tidy" them. To capture a newer prompt, add a new dated set — never
-  rewrite an existing one.
-- The reusable ruleset lives in `templates/CLAUDE.md`. Change rules there rather
-  than copying prose between files.
-- Keep `README.md` in sync when you change how the kit works.
-- Develop on the branch you were assigned; don't push elsewhere without being asked.
+## Project structure
+- `Cb-Grabber/` - Main project directory with source code and resources
+- `prompts/` - Claude Code system prompt snapshots for reference
+- `CLAUDE.md` - This file; project-specific rules
+
+## Rules for this project
+- Work in feature branches; create PRs for review before merging to main
+- Test changes locally before committing
+- Keep commit messages clear and descriptive
+- Document any new features or breaking changes in README.md
+- System prompt files in `prompts/` are reference material only — don't edit them
 
 ## Working style
-Follow the same rules this kit ships in `templates/CLAUDE.md`: read before you
-change, do only what's asked, keep replies concise, prefer editing over creating
-files, and confirm before anything hard to undo or visible to others.
+- Read before you change
+- Do only what's asked
+- Keep replies concise
+- Prefer editing over creating files
+- Confirm before anything hard to undo or visible to others
