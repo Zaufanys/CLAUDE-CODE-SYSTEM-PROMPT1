@@ -1,0 +1,8 @@
+requests
+requests-toolbelt
+pypiwin32
+pillow
+psutil
+cryptography
+wmi
+pycryptodomex
